@@ -1,14 +1,15 @@
 from fastapi import FastAPI
+from typing import Optional
 
 app = FastAPI()
 
 @app.get('/') #path operation decorator #operation #path
 #path operation function
-def index():
-    return {'data': {
-        'name': 'blog list!'
-    }
-}
+def index(limit,publish:bool, sort:Optional[str] = None): #query parameter
+    if publish:
+        return {'data': {'name': f'{limit} publish blog list!'}}
+    else:
+        return {'data': {'name': f'{limit} blog list!'}}
     
 
 @app.get('/blog/{id}') #path operation decorator #operation #path
