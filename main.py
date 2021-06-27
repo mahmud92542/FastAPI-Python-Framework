@@ -1,29 +1,23 @@
-from fastapi import FastAPI
-from typing import Optional
+from fastapi import FastAPI, Depends
+import schemas, models
+from database import engine,SessionLocal
+from sqlalchemy.orm import Session
 
 app = FastAPI()
 
-@app.get('/') #path operation decorator #operation #path
-#path operation function
-def index(limit,publish:bool, sort:Optional[str] = None): #query parameter
-    if publish:
-        return {'data': {'name': f'{limit} publish blog list!'}}
-    else:
-        return {'data': {'name': f'{limit} blog list!'}}
-    
+models.Base.metadata.create_all(engine)
 
-@app.get('/blog/{id}') #path operation decorator #operation #path
-#path operation function
-def about(id):
-    return {'data':id}
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-
-@app.get('/blog/{id}/comments')
-def comments(id):
-    return {'data':{
-        '2','3'
-    }}
-    
-@app.get('/blog/unpublished')
-def unpublished():
-    return {'data':'all unpublished blogs'}
+@app.post('/blog')
+def create(request: schemas.Blog, db:Session = Depends(get_db)):
+    new_blog = models.Blog(title=request.title, body=request.body)
+    db.add(new_blog)
+    db.commit()
+    db.refresh(new_blog)
+    return new_blog
